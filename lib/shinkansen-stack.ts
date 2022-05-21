@@ -3,6 +3,8 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
+import * as nodeLambda from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as path from 'path'
 
 export class ShinkansenStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -15,5 +17,11 @@ export class ShinkansenStack extends Stack {
     const topic = new sns.Topic(this, 'ShinkansenTopic');
 
     topic.addSubscription(new subs.SqsSubscription(queue));
+
+    new nodeLambda.NodejsFunction(this, 'NodeLambda', {
+      entry: path.join(__dirname, '../lambda/index.ts'),
+      handler: 'handler',
+  }); 
+
   }
 }
