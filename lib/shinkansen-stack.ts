@@ -1,10 +1,11 @@
-import { Duration, Stack, StackProps } from 'aws-cdk-lib';
-import * as sns from 'aws-cdk-lib/aws-sns';
-import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
+import { aws_dynamodb, Duration, Stack, StackProps } from 'aws-cdk-lib';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 import * as nodeLambda from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as path from 'path'
+import { Table } from 'aws-cdk-lib/aws-dynamodb';
+import * as cdk from '@aws-cdk/core';
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
 
 export class ShinkansenStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -14,13 +15,34 @@ export class ShinkansenStack extends Stack {
       visibilityTimeout: Duration.seconds(300)
     });
 
-    const topic = new sns.Topic(this, 'ShinkansenTopic');
+    const logTable = new Table(this, 'logTable',  {
+      partitionKey: {
+        name: 'type',
+        type: aws_dynamodb.AttributeType.STRING
+      },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      billingMode: aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+    }
+    );
 
-    topic.addSubscription(new subs.SqsSubscription(queue));
+    const nodeJsFunctionProps: nodeLambda.NodejsFunctionProps = {
+      bundling: {
+        externalModules: [
+          'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime
+        ],
+      },
+      depsLockFilePath: path.join(__dirname, '../lambda/package-lock.json'),
+      environment: {
+        PRIMARY_KEY: 'itemId',
+        TABLE_NAME: logTable.tableName,
+      },
+      runtime: Runtime.NODEJS_14_X,
+      handler: 'handler',
+    };
 
     new nodeLambda.NodejsFunction(this, 'NodeLambda', {
       entry: path.join(__dirname, '../lambda/index.ts'),
-      handler: 'handler',
+      ...nodeJsFunctionProps,
   }); 
 
   }
