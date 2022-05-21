@@ -40,10 +40,12 @@ export class ShinkansenStack extends Stack {
       handler: 'handler',
     };
 
-    new nodeLambda.NodejsFunction(this, 'NodeLambda', {
+    const handler = new nodeLambda.NodejsFunction(this, 'NodeLambda', {
       entry: path.join(__dirname, '../lambda/index.ts'),
       ...nodeJsFunctionProps,
   }); 
+
+    logTable.grantReadWriteData(handler);
 
   }
 }
