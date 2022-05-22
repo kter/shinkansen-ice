@@ -8,6 +8,8 @@ import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import * as cdk from '@aws-cdk/core';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 
+// TODO1: リツイート機能を別Lambdaに切り出し、SQSで発火
+
 export class ShinkansenStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -32,6 +34,8 @@ export class ShinkansenStack extends Stack {
           'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime
         ],
       },
+      memorySize: 1024,
+      timeout: Duration.seconds(6),
       depsLockFilePath: path.join(__dirname, '../lambda/package-lock.json'),
       environment: {
         PRIMARY_KEY: 'itemId',
