@@ -64,7 +64,7 @@ export const handler: EmptyHandler = async function () {
                     TableName: tableName,
                     Item: {
                         type: "previousLoadPosition",
-                        value: response.data[0],
+                        value: response.data[0].id,
                     },
                 };
                 db.put(putParam).promise();
