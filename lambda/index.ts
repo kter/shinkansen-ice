@@ -50,35 +50,27 @@ export const handler: EmptyHandler = async function () {
         }
     }
 
-    (async () => {
-        try {
-            // ツイート検索実行
-            const response = await getRequest();
-            console.dir(response, {
-                depth: null
-            });
-            // 結果がある場合
-            if (response.data[0]) {
-                // ツイートIDを保存
-                const putParam = {
-                    TableName: tableName,
-                    Item: {
-                        type: "previousLoadPosition",
-                        value: response.data[0].id,
-                    },
-                };
-                db.put(putParam).promise();
-            }
-            return JSON.stringify({
-                data: console.dir(response.data, { depth: null })
-            });
+    // ツイート検索実行
+    const response = await getRequest();
+    console.dir(response, {
+        depth: null
+    });
+    // 結果がある場合
+    if (response.data[0]) {
+        // ツイートIDを保存
+        const putParam = {
+            TableName: tableName,
+            Item: {
+                type: "previousLoadPosition",
+                value: response.data[0].id,
+            },
+        };
+        db.put(putParam).promise();
+    }
+    return JSON.stringify({
+        data: console.dir(response.data, { depth: null })
+    });
 
-        } catch (e) {
-            console.log(e);
-            process.exit(-1);
-        }
-        process.exit();
-    })();
 
 
 
