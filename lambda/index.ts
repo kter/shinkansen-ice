@@ -35,7 +35,6 @@ export const handler: EmptyHandler = async function () {
     async function getRequest() {
         const params = {
             'query': '#シンカンセンスゴクカタイアイス -is:retweet has:media',
-            'tweet.fields': 'author_id'
         }
         const res = await needle('get', endpointUrl, params, {
             headers: {
