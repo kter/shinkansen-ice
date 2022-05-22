@@ -1,5 +1,6 @@
 import { aws_dynamodb, Duration, Stack, StackProps } from 'aws-cdk-lib';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import * as nodeLambda from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as path from 'path'
@@ -47,5 +48,11 @@ export class ShinkansenStack extends Stack {
 
     logTable.grantReadWriteData(handler);
 
+    const twitterToken = ssm.StringParameter.fromSecureStringParameterAttributes(
+      this, 'twitterToken', {
+        parameterName: '/shinkansen-ice/twitter',
+      }
+    )
+    twitterToken.grantRead(handler)
   }
 }
