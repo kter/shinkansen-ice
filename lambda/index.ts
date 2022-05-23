@@ -34,7 +34,7 @@ export const handler: EmptyHandler = async function () {
     const endpointUrl = "https://api.twitter.com/2/tweets/search/recent";
     async function getRequest() {
         const params = {
-            'query': '#シンカンセンスゴクカタイアイス -is:retweet has:media',
+            'query': '(シンカンセンスゴクカタイアイス OR シンカンセンスゴイカタイアイス OR 新幹線ごく堅いアイス OR 新幹線すごい堅いアイス OR 新幹線すごく固いアイス) -is:retweet has:media',
         }
         const res = await needle('get', endpointUrl, params, {
             headers: {
@@ -57,18 +57,35 @@ export const handler: EmptyHandler = async function () {
     });
     // 結果がある場合
     if (response.data[0]) {
-        // ツイートIDを保存
-        const putParam = {
-            TableName: tableName,
-            Item: {
-                type: "previousLoadPosition",
-                value: response.data[0].id,
-            },
-        };
-        db.put(putParam).promise();
+        if (parseInt(response.data[0].id) > parseInt(previousId)) {
+            // ツイートIDを保存
+            const putParam = {
+                TableName: tableName,
+                Item: {
+                    type: "previousLoadPosition",
+                    value: response.data[0].id,
+                },
+            };
+            db.put(putParam).promise();
+            console.log('[DEBUG]' + 'saved previous tweet id: ' + response.data[0].id);
+
+            // リツイート処理
+            for (let i = 0; i < response.data.length; i++) {
+                // もし新しいツイートがなければ終了
+                if (parseInt(response.data[i].id) <= parseInt(previousId)) {
+                    console.log('[DEBUG]' + 'no newer tweets: ' + response.data[i].id);
+                    break;
+                }
+                console.log('(test) retweet: ' + response.data[i].id);
+            }
+        } else {
+            console.log('[DEBUG]' + 'search data retrieved. but not new tweet');
+        }
+    } else {
+        console.log('[DEBUG]' + 'no search data retrieved');
     }
     return JSON.stringify({
-        data: console.dir(response.data, { depth: null })
+        status: 'success'
     });
 
 
