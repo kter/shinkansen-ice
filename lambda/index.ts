@@ -1,5 +1,7 @@
+import { ClientAttributes } from 'aws-cdk-lib/aws-cognito';
 import { Handler } from 'aws-lambda';
 import { DynamoDB, SSM } from 'aws-sdk';
+import { TwitterApi } from 'twitter-api-v2';
 
 type EmptyHandler = Handler<void, string>;
 
@@ -20,14 +22,31 @@ export const handler: EmptyHandler = async function () {
     console.log('previousID: ' + previousId);
 
     // Twitterのトークンを取得
+    // BARER TOKEN
     const ssm = new SSM();
-    const params = {
+    const barerParams = {
         Name: '/shinkansen-ice/twitter',
         WithDecryption: true,
     };
-    const token = await ssm.getParameter(params).promise();
+    const token = await ssm.getParameter(barerParams).promise();
     const bearerToken = token.Parameter.Value;
     console.log('token: ' + bearerToken);
+    // APP KEY
+    const appKeyParams = {
+        Name: '/shinkansen-ice/app-key',
+        WithDecryption: true,
+    };
+    const appKey = await ssm.getParameter(appKeyParams).promise();
+    const appKeyVal = appKey.Parameter.Value;
+    console.log('app key: ' + appKeyVal);
+    // APP SECRET
+    const appSecretParams = {
+        Name: '/shinkansen-ice/app-secret',
+        WithDecryption: true,
+    };
+    const appSecretVal = await ssm.getParameter(appSecretParams).promise();
+    const appSecret = appSecretVal.Parameter.Value;
+    console.log('app secret: ' + appSecret);
 
     // ツイート検索
     const needle = require('needle');
@@ -77,6 +96,12 @@ export const handler: EmptyHandler = async function () {
                     break;
                 }
                 console.log('(test) retweet: ' + response.data[i].id);
+                const twitterClient = new TwitterApi({
+                    appKey: appKey,
+                    appSecret: appSecret,
+                });
+                const loggedUser = await twitterClient.v1.verifyCredentials();
+                await twitterClient.v2.retweet(loggedUser.id_str, response.data[i].id);
             }
         } else {
             console.log('[DEBUG]' + 'search data retrieved. but not new tweet');

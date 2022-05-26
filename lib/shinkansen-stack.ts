@@ -58,5 +58,17 @@ export class ShinkansenStack extends Stack {
       }
     )
     twitterToken.grantRead(handler)
+    const appKey = ssm.StringParameter.fromSecureStringParameterAttributes(
+      this, 'appKey', {
+        parameterName: '/shinkansen-ice/app-key',
+      }
+    )
+    appKey.grantRead(handler)
+    const appSecret = ssm.StringParameter.fromSecureStringParameterAttributes(
+      this, 'appSecret', {
+        parameterName: '/shinkansen-ice/app-secret',
+      }
+    )
+    appSecret.grantRead(handler)
   }
 }
