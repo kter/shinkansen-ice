@@ -102,10 +102,19 @@ export const handler: EmptyHandler = async function () {
                     value: response.data[0].id,
                 },
             };
-            db.put(putParam).promise();
+            // DEBUG
+            // db.put(putParam).promise();
             console.log('[DEBUG]' + 'saved previous tweet id: ' + response.data[0].id);
 
             // リツイート処理
+            //const twitterClient = new TwitterApi(bearerToken);
+            const twitterClient = new TwitterApi({
+                appKey: appKey,
+                appSecret: appSecret,
+                accessToken: accessToken,
+                accessSecret: accessSecret,
+            });
+            const rwClient = twitterClient.readWrite;
             for (let i = 0; i < response.data.length; i++) {
                 // もし新しいツイートがなければ終了
                 if (parseInt(response.data[i].id) <= parseInt(previousId)) {
@@ -113,13 +122,7 @@ export const handler: EmptyHandler = async function () {
                     break;
                 }
                 console.log('(test) retweet: ' + response.data[i].id);
-                const twitterClient = new TwitterApi({
-                    appKey: appKey,
-                    appSecret: appSecret,
-                    accessToken: accessToken,
-                    accessSecret: accessSecret,
-                });
-                await twitterClient.v2.retweet("843652192934350848", response.data[i].id);
+                await rwClient.v2.retweet("843652192934350848", response.data[i].id);
             }
         } else {
             console.log('[DEBUG]' + 'search data retrieved. but not new tweet');
