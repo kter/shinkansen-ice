@@ -122,7 +122,9 @@ export const handler: EmptyHandler = async function () {
                     break;
                 }
                 console.log('(test) retweet: ' + response.data[i].id);
-                await rwClient.v2.retweet("843652192934350848", response.data[i].id);
+                // await rwClient.v2.retweet("843652192934350848", response.data[i].id);
+                await rwClient.v1.post(`statuses/retweet/${response.data[i].id}.json`); 
+
             }
         } else {
             console.log('[DEBUG]' + 'search data retrieved. but not new tweet');
