@@ -7,6 +7,7 @@ import * as path from 'path'
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import * as cdk from '@aws-cdk/core';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { access } from 'fs';
 
 // TODO1: リツイート機能を別Lambdaに切り出し、SQSで発火
 
@@ -70,5 +71,17 @@ export class ShinkansenStack extends Stack {
       }
     )
     appSecret.grantRead(handler)
+    const accessToken = ssm.StringParameter.fromSecureStringParameterAttributes(
+      this, 'accessToken', {
+        parameterName: '/shinkansen-ice/access-token',
+      }
+    )
+    accessToken.grantRead(handler)
+    const accessSecret = ssm.StringParameter.fromSecureStringParameterAttributes(
+      this, 'accessSecret', {
+        parameterName: '/shinkansen-ice/access-secret',
+      }
+    )
+    accessSecret.grantRead(handler)
   }
 }

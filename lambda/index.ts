@@ -1,6 +1,7 @@
 import { ClientAttributes } from 'aws-cdk-lib/aws-cognito';
 import { Handler } from 'aws-lambda';
 import { DynamoDB, SSM } from 'aws-sdk';
+import { access } from 'fs';
 import { TwitterApi } from 'twitter-api-v2';
 
 type EmptyHandler = Handler<void, string>;
@@ -47,6 +48,22 @@ export const handler: EmptyHandler = async function () {
     const appSecretVal = await ssm.getParameter(appSecretParams).promise();
     const appSecret = appSecretVal.Parameter.Value;
     console.log('app secret: ' + appSecret);
+    // ACCES TOKEN
+    const accessTokenParams = {
+        Name: '/shinkansen-ice/access-token',
+        WithDecryption: true,
+    };
+    const accessTokenVal = await ssm.getParameter(accessTokenParams).promise();
+    const accessToken = accessTokenVal.Parameter.Value;
+    console.log('access token: ' + accessToken);
+    // ACCESS SECRET
+    const accessSecretParams = {
+        Name: '/shinkansen-ice/access-secret',
+        WithDecryption: true,
+    };
+    const accessSecretVal = await ssm.getParameter(accessSecretParams).promise();
+    const accessSecret = accessSecretVal.Parameter.Value;
+    console.log('access secret: ' + accessSecret);
 
     // ツイート検索
     const needle = require('needle');
@@ -99,9 +116,10 @@ export const handler: EmptyHandler = async function () {
                 const twitterClient = new TwitterApi({
                     appKey: appKey,
                     appSecret: appSecret,
+                    accessToken: accessToken,
+                    accessSecret: accessSecret,
                 });
-                const loggedUser = await twitterClient.v1.verifyCredentials();
-                await twitterClient.v2.retweet(loggedUser.id_str, response.data[i].id);
+                await twitterClient.v2.retweet("843652192934350848", response.data[i].id);
             }
         } else {
             console.log('[DEBUG]' + 'search data retrieved. but not new tweet');
