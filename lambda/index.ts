@@ -3,7 +3,8 @@ import { Handler } from 'aws-lambda';
 import { DynamoDB, SSM } from 'aws-sdk';
 import { access } from 'fs';
 // import { TwitterApi } from 'twitter-api-v2';
-const twitter = require('twitter');
+// const twitter = require('twitter');
+import Twitter from 'twitter-lite';
 
 type EmptyHandler = Handler<void, string>;
 
@@ -38,9 +39,8 @@ export const handler: EmptyHandler = async function () {
         Name: '/shinkansen-ice/app-key',
         WithDecryption: true,
     };
-    const appKey = await ssm.getParameter(appKeyParams).promise();
-    const appKeyVal = appKey.Parameter.Value;
-    console.log('app key: ' + appKeyVal);
+    const appKeyVal = await ssm.getParameter(appKeyParams).promise();
+    const appKey = appKeyVal.Parameter.Value;
     // APP SECRET
     const appSecretParams = {
         Name: '/shinkansen-ice/app-secret',
@@ -48,7 +48,6 @@ export const handler: EmptyHandler = async function () {
     };
     const appSecretVal = await ssm.getParameter(appSecretParams).promise();
     const appSecret = appSecretVal.Parameter.Value;
-    console.log('app secret: ' + appSecret);
     // ACCES TOKEN
     const accessTokenParams = {
         Name: '/shinkansen-ice/access-token',
@@ -56,7 +55,6 @@ export const handler: EmptyHandler = async function () {
     };
     const accessTokenVal = await ssm.getParameter(accessTokenParams).promise();
     const accessToken = accessTokenVal.Parameter.Value;
-    console.log('access token: ' + accessToken);
     // ACCESS SECRET
     const accessSecretParams = {
         Name: '/shinkansen-ice/access-secret',
@@ -64,23 +62,6 @@ export const handler: EmptyHandler = async function () {
     };
     const accessSecretVal = await ssm.getParameter(accessSecretParams).promise();
     const accessSecret = accessSecretVal.Parameter.Value;
-    console.log('access secret: ' + accessSecret);
-    // CLIENT ID
-    const clientIdParam = {
-        Name: '/shinkansen-ice/client-id',
-        WithDecryption: true,
-    };
-    const clientIdVal = await ssm.getParameter(clientIdParam).promise();
-    const clientId = clientIdVal.Parameter.Value;
-    console.log('client id: ' + clientId);
-    // CLIENT SECRET
-    const clientSecretParam = {
-        Name: '/shinkansen-ice/client-secret',
-        WithDecryption: true,
-    };
-    const clientSecretVal = await ssm.getParameter(clientSecretParam).promise();
-    const clientSecret = clientSecretVal.Parameter.Value;
-    console.log('clietn secret: ' + clientSecret);
 
     // ツイート検索
     const needle = require('needle');
@@ -108,7 +89,6 @@ export const handler: EmptyHandler = async function () {
     console.dir(response, {
         depth: null
     });
-    let promises = [];
     // 結果がある場合
     if (response.data[0]) {
         if (parseInt(response.data[0].id) > parseInt(previousId)) {
@@ -121,7 +101,7 @@ export const handler: EmptyHandler = async function () {
                 },
             };
             // DEBUG
-            // db.put(putParam).promise();
+            db.put(putParam).promise();
             console.log('[DEBUG]' + 'saved previous tweet id: ' + response.data[0].id);
 
             // リツイート処理
@@ -138,7 +118,12 @@ export const handler: EmptyHandler = async function () {
             //     clientSecret: clientSecret,
             // });
             // const rwClient = twitterClient.readWrite;
-            const client = new twitter({
+
+            // console.log('app key:' + appKey + ':');
+            // console.log('app secret:' + appSecret + ':');
+            // console.log('access token:' + accessToken + ':');
+            // console.log('access secret:' + accessSecret + ":");
+            const client = new Twitter({
                 consumer_key: appKey,
                 consumer_secret: appSecret,
                 access_token_key: accessToken,
@@ -154,7 +139,27 @@ export const handler: EmptyHandler = async function () {
                 console.log('(test) retweet: ' + response.data[i].id);
                 // await rwClient.v2.retweet("843652192934350848", response.data[i].id);
                 // await rwClient.v1.post(`statuses/retweet/${response.data[i].id}.json`); 
-                promises.push(client.post('statuses/retweet/' + response.data[i].id, {}));
+                try {
+                    let res = await client.post('statuses/retweet/' + response.data[i].id, {
+                        id: response.data[i].id
+                    });
+                    console.dir(res);
+                    // ... use response here ...
+                } catch (e) {
+                    if ('errors' in e) {
+                        // Twitter API error
+                        if (e.errors[0].code === 88) {
+                            // rate limit exceeded
+                            console.log("Rate limit will reset on", new Date(e._headers.get("x-rate-limit-reset") * 1000));
+                        } else {
+                        // some other kind of error, e.g. read-only API trying to POST
+                        console.log("API Error: " + JSON.stringify(e));
+                        }
+                    } else {
+                        // non-API error, e.g. network problem or invalid JSON in response
+                        console.log("NON-API Error: " + JSON.stringify(e));
+                    }
+                }
             }
         } else {
             console.log('[DEBUG]' + 'search data retrieved. but not new tweet');
@@ -162,10 +167,6 @@ export const handler: EmptyHandler = async function () {
     } else {
         console.log('[DEBUG]' + 'no search data retrieved');
     }
-    Promise.all(promises)
-    .then(function (results) {
-        console.dir(results);
-    });
     return JSON.stringify({
         status: 'success'
     });
