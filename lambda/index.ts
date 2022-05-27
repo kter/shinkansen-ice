@@ -108,6 +108,7 @@ export const handler: EmptyHandler = async function () {
     console.dir(response, {
         depth: null
     });
+    let promises = [];
     // 結果がある場合
     if (response.data[0]) {
         if (parseInt(response.data[0].id) > parseInt(previousId)) {
@@ -153,14 +154,7 @@ export const handler: EmptyHandler = async function () {
                 console.log('(test) retweet: ' + response.data[i].id);
                 // await rwClient.v2.retweet("843652192934350848", response.data[i].id);
                 // await rwClient.v1.post(`statuses/retweet/${response.data[i].id}.json`); 
-                client.post('statuses/retweet/' + response.data[i].id, {})
-                .then(function (tweet: any) {
-                    console.log(tweet);
-                  })
-                  .catch(function (error: any) {
-                    throw error;
-                  })
-
+                promises.push(client.post('statuses/retweet/' + response.data[i].id, {}));
             }
         } else {
             console.log('[DEBUG]' + 'search data retrieved. but not new tweet');
@@ -168,6 +162,10 @@ export const handler: EmptyHandler = async function () {
     } else {
         console.log('[DEBUG]' + 'no search data retrieved');
     }
+    Promise.all(promises)
+    .then(function (results) {
+        console.dir(results);
+    });
     return JSON.stringify({
         status: 'success'
     });
