@@ -1,5 +1,4 @@
 import { aws_dynamodb, Duration, Stack, StackProps } from 'aws-cdk-lib';
-import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import * as nodeLambda from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -7,6 +6,8 @@ import * as path from 'path'
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import * as cdk from '@aws-cdk/core';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import * as events from "aws-cdk-lib/aws-events";
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 
 export class ShinkansenStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -76,5 +77,10 @@ export class ShinkansenStack extends Stack {
     }
     )
     accessSecret.grantRead(handler)
+
+    new events.Rule(this, "lambdaRule", {
+      schedule: events.Schedule.rate(Duration.minutes(1)),
+      targets: [new targets.LambdaFunction(handler, {retryAttempts: 3})],
+  });
   }
 }
