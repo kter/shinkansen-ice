@@ -2,7 +2,8 @@ import { ClientAttributes } from 'aws-cdk-lib/aws-cognito';
 import { Handler } from 'aws-lambda';
 import { DynamoDB, SSM } from 'aws-sdk';
 import { access } from 'fs';
-import { TwitterApi } from 'twitter-api-v2';
+// import { TwitterApi } from 'twitter-api-v2';
+const twitter = require('twitter');
 
 type EmptyHandler = Handler<void, string>;
 
@@ -125,17 +126,24 @@ export const handler: EmptyHandler = async function () {
             // リツイート処理
             // bearer tokenはリツイートできない
             // const twitterClient = new TwitterApi(bearerToken);
-            const twitterClient = new TwitterApi({
-                appKey: appKey,
-                appSecret: appSecret,
-                accessToken: accessToken,
-                accessSecret: accessSecret,
-            });
+            // const twitterClient = new TwitterApi({
+            //     appKey: appKey,
+            //     appSecret: appSecret,
+            //     accessToken: accessToken,
+            //     accessSecret: accessSecret,
+            // });
             // const twitterClient = new TwitterApi({
             //     clientId: clientId,
             //     clientSecret: clientSecret,
             // });
-            const rwClient = twitterClient.readWrite;
+            // const rwClient = twitterClient.readWrite;
+            const client = new twitter({
+                consumer_key: appKey,
+                consumer_secret: appSecret,
+                access_token_key: accessToken,
+                access_token_secret: accessSecret,
+              });
+
             for (let i = 0; i < response.data.length; i++) {
                 // もし新しいツイートがなければ終了
                 if (parseInt(response.data[i].id) <= parseInt(previousId)) {
@@ -143,9 +151,15 @@ export const handler: EmptyHandler = async function () {
                     break;
                 }
                 console.log('(test) retweet: ' + response.data[i].id);
-                await rwClient.v2.retweet("843652192934350848", response.data[i].id);
+                // await rwClient.v2.retweet("843652192934350848", response.data[i].id);
                 // await rwClient.v1.post(`statuses/retweet/${response.data[i].id}.json`); 
-
+                client.post('statuses/retweet/' + response.data[i].id, function(error: any, tweet: any, response: any) {
+                    console.dir(tweet);
+                    console.dir(response);
+                  if (!error) {
+                    console.log(tweet);
+                  }
+                });
             }
         } else {
             console.log('[DEBUG]' + 'search data retrieved. but not new tweet');
