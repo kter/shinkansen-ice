@@ -64,6 +64,22 @@ export const handler: EmptyHandler = async function () {
     const accessSecretVal = await ssm.getParameter(accessSecretParams).promise();
     const accessSecret = accessSecretVal.Parameter.Value;
     console.log('access secret: ' + accessSecret);
+    // CLIENT ID
+    const clientIdParam = {
+        Name: '/shinkansen-ice/client-id',
+        WithDecryption: true,
+    };
+    const clientIdVal = await ssm.getParameter(clientIdParam).promise();
+    const clientId = clientIdVal.Parameter.Value;
+    console.log('client id: ' + clientId);
+    // CLIENT SECRET
+    const clientSecretParam = {
+        Name: '/shinkansen-ice/client-secret',
+        WithDecryption: true,
+    };
+    const clientSecretVal = await ssm.getParameter(clientSecretParam).promise();
+    const clientSecret = clientSecretVal.Parameter.Value;
+    console.log('clietn secret: ' + clientSecret);
 
     // ツイート検索
     const needle = require('needle');
@@ -107,13 +123,18 @@ export const handler: EmptyHandler = async function () {
             console.log('[DEBUG]' + 'saved previous tweet id: ' + response.data[0].id);
 
             // リツイート処理
-            //const twitterClient = new TwitterApi(bearerToken);
+            // bearer tokenはリツイートできない
+            // const twitterClient = new TwitterApi(bearerToken);
             const twitterClient = new TwitterApi({
                 appKey: appKey,
                 appSecret: appSecret,
                 accessToken: accessToken,
                 accessSecret: accessSecret,
             });
+            // const twitterClient = new TwitterApi({
+            //     clientId: clientId,
+            //     clientSecret: clientSecret,
+            // });
             const rwClient = twitterClient.readWrite;
             for (let i = 0; i < response.data.length; i++) {
                 // もし新しいツイートがなければ終了
@@ -122,8 +143,8 @@ export const handler: EmptyHandler = async function () {
                     break;
                 }
                 console.log('(test) retweet: ' + response.data[i].id);
-                // await rwClient.v2.retweet("843652192934350848", response.data[i].id);
-                await rwClient.v1.post(`statuses/retweet/${response.data[i].id}.json`); 
+                await rwClient.v2.retweet("843652192934350848", response.data[i].id);
+                // await rwClient.v1.post(`statuses/retweet/${response.data[i].id}.json`); 
 
             }
         } else {
@@ -135,11 +156,5 @@ export const handler: EmptyHandler = async function () {
     return JSON.stringify({
         status: 'success'
     });
-
-
-
-
-
-
 }
 

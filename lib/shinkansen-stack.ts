@@ -83,5 +83,17 @@ export class ShinkansenStack extends Stack {
       }
     )
     accessSecret.grantRead(handler)
+    const clientId = ssm.StringParameter.fromSecureStringParameterAttributes(
+      this, 'clientId', {
+        parameterName: '/shinkansen-ice/client-id',
+      }
+    )
+    clientId.grantRead(handler)
+    const clientSecret = ssm.StringParameter.fromSecureStringParameterAttributes(
+      this, 'clientSecret', {
+        parameterName: '/shinkansen-ice/client-secret',
+      }
+    )
+    clientSecret.grantRead(handler)
   }
 }
