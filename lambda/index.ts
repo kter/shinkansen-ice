@@ -82,9 +82,9 @@ export const handler: EmptyHandler = async function () {
 
     // ツイート検索実行
     const response = await getRequest();
-    console.dir(response, {
-        depth: null
-    });
+    // console.dir(response, {
+    //     depth: null
+    // });
     // 結果がある場合
     if (response.data[0]) {
         if (parseInt(response.data[0].id) > parseInt(previousId)) {
@@ -122,8 +122,7 @@ export const handler: EmptyHandler = async function () {
                     let res = await client.post('statuses/retweet/' + response.data[i].id, {
                         id: response.data[i].id
                     });
-                    // ... use response here ...
-                    console.dir(res);
+                    // console.dir(res);
                 } catch (e) {
                     if ('errors' in e) {
                         // Twitter API error

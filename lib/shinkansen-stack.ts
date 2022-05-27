@@ -1,13 +1,13 @@
-import { aws_dynamodb, Duration, Stack, StackProps } from 'aws-cdk-lib';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
-import { Construct } from 'constructs';
+import * as cdk from '@aws-cdk/core';
+import * as events from "aws-cdk-lib/aws-events";
 import * as nodeLambda from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as path from 'path'
-import { Table } from 'aws-cdk-lib/aws-dynamodb';
-import * as cdk from '@aws-cdk/core';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
-import * as events from "aws-cdk-lib/aws-events";
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
+import { Construct } from 'constructs';
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Table } from 'aws-cdk-lib/aws-dynamodb';
+import { aws_dynamodb, Duration, Stack, StackProps } from 'aws-cdk-lib';
 
 export class ShinkansenStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -29,7 +29,7 @@ export class ShinkansenStack extends Stack {
           'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime
         ],
       },
-      memorySize: 1024,
+      memorySize: 128,
       timeout: Duration.seconds(6),
       depsLockFilePath: path.join(__dirname, '../lambda/package-lock.json'),
       environment: {
