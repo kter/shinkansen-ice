@@ -7,19 +7,12 @@ import * as path from 'path'
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import * as cdk from '@aws-cdk/core';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
-import { access } from 'fs';
-
-// TODO1: リツイート機能を別Lambdaに切り出し、SQSで発火
 
 export class ShinkansenStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const queue = new sqs.Queue(this, 'ShinkansenQueue', {
-      visibilityTimeout: Duration.seconds(300)
-    });
-
-    const logTable = new Table(this, 'logTable',  {
+    const logTable = new Table(this, 'logTable', {
       partitionKey: {
         name: 'type',
         type: aws_dynamodb.AttributeType.STRING
@@ -49,38 +42,38 @@ export class ShinkansenStack extends Stack {
     const handler = new nodeLambda.NodejsFunction(this, 'NodeLambda', {
       entry: path.join(__dirname, '../lambda/index.ts'),
       ...nodeJsFunctionProps,
-  }); 
+    });
 
     logTable.grantReadWriteData(handler);
 
     const twitterToken = ssm.StringParameter.fromSecureStringParameterAttributes(
       this, 'twitterToken', {
-        parameterName: '/shinkansen-ice/twitter',
-      }
+      parameterName: '/shinkansen-ice/twitter',
+    }
     )
     twitterToken.grantRead(handler)
     const appKey = ssm.StringParameter.fromSecureStringParameterAttributes(
       this, 'appKey', {
-        parameterName: '/shinkansen-ice/app-key',
-      }
+      parameterName: '/shinkansen-ice/app-key',
+    }
     )
     appKey.grantRead(handler)
     const appSecret = ssm.StringParameter.fromSecureStringParameterAttributes(
       this, 'appSecret', {
-        parameterName: '/shinkansen-ice/app-secret',
-      }
+      parameterName: '/shinkansen-ice/app-secret',
+    }
     )
     appSecret.grantRead(handler)
     const accessToken = ssm.StringParameter.fromSecureStringParameterAttributes(
       this, 'accessToken', {
-        parameterName: '/shinkansen-ice/access-token',
-      }
+      parameterName: '/shinkansen-ice/access-token',
+    }
     )
     accessToken.grantRead(handler)
     const accessSecret = ssm.StringParameter.fromSecureStringParameterAttributes(
       this, 'accessSecret', {
-        parameterName: '/shinkansen-ice/access-secret',
-      }
+      parameterName: '/shinkansen-ice/access-secret',
+    }
     )
     accessSecret.grantRead(handler)
   }

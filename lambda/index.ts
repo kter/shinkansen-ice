@@ -1,9 +1,5 @@
-import { ClientAttributes } from 'aws-cdk-lib/aws-cognito';
 import { Handler } from 'aws-lambda';
 import { DynamoDB, SSM } from 'aws-sdk';
-import { access } from 'fs';
-// import { TwitterApi } from 'twitter-api-v2';
-// const twitter = require('twitter');
 import Twitter from 'twitter-lite';
 
 type EmptyHandler = Handler<void, string>;
@@ -100,25 +96,10 @@ export const handler: EmptyHandler = async function () {
                     value: response.data[0].id,
                 },
             };
-            // DEBUG
             db.put(putParam).promise();
             console.log('[DEBUG]' + 'saved previous tweet id: ' + response.data[0].id);
 
             // リツイート処理
-            // bearer tokenはリツイートできない
-            // const twitterClient = new TwitterApi(bearerToken);
-            // const twitterClient = new TwitterApi({
-            //     appKey: appKey,
-            //     appSecret: appSecret,
-            //     accessToken: accessToken,
-            //     accessSecret: accessSecret,
-            // });
-            // const twitterClient = new TwitterApi({
-            //     clientId: clientId,
-            //     clientSecret: clientSecret,
-            // });
-            // const rwClient = twitterClient.readWrite;
-
             // console.log('app key:' + appKey + ':');
             // console.log('app secret:' + appSecret + ':');
             // console.log('access token:' + accessToken + ':');
@@ -136,15 +117,13 @@ export const handler: EmptyHandler = async function () {
                     console.log('[DEBUG]' + 'no newer tweets: ' + response.data[i].id);
                     break;
                 }
-                console.log('(test) retweet: ' + response.data[i].id);
-                // await rwClient.v2.retweet("843652192934350848", response.data[i].id);
-                // await rwClient.v1.post(`statuses/retweet/${response.data[i].id}.json`); 
+                console.log('[DEBUG]retweet: ' + response.data[i].id);
                 try {
                     let res = await client.post('statuses/retweet/' + response.data[i].id, {
                         id: response.data[i].id
                     });
-                    console.dir(res);
                     // ... use response here ...
+                    console.dir(res);
                 } catch (e) {
                     if ('errors' in e) {
                         // Twitter API error
