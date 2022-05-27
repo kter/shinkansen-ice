@@ -153,13 +153,14 @@ export const handler: EmptyHandler = async function () {
                 console.log('(test) retweet: ' + response.data[i].id);
                 // await rwClient.v2.retweet("843652192934350848", response.data[i].id);
                 // await rwClient.v1.post(`statuses/retweet/${response.data[i].id}.json`); 
-                client.post('statuses/retweet/' + response.data[i].id, function(error: any, tweet: any, response: any) {
-                    console.dir(tweet);
-                    console.dir(response);
-                  if (!error) {
+                client.post('statuses/retweet/' + response.data[i].id, {})
+                .then(function (tweet: any) {
                     console.log(tweet);
-                  }
-                });
+                  })
+                  .catch(function (error: any) {
+                    throw error;
+                  })
+
             }
         } else {
             console.log('[DEBUG]' + 'search data retrieved. but not new tweet');
